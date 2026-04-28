@@ -6,7 +6,9 @@ import numpy as np
 
 ROOT_DIR = Path(__file__).resolve().parent
 RESULTS_DIR = ROOT_DIR / "results"
+TOF_RESULTS_DIR = RESULTS_DIR / "tof_comparisons"
 RESULTS_DIR.mkdir(exist_ok=True)
+TOF_RESULTS_DIR.mkdir(exist_ok=True)
 TOF_CSV = ROOT_DIR / "tof_results.csv"
 
 from model_data import metals, exp_tof, ads_energies
@@ -123,7 +125,7 @@ def plot_tof_vs_descriptor(results, descriptor, output_name, mechanism_filter=No
     ax.set_title(title)
     ax.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.5)
     fig.tight_layout()
-    fig.savefig(RESULTS_DIR / output_name, dpi=300, bbox_inches="tight")
+    fig.savefig(TOF_RESULTS_DIR / output_name, dpi=300, bbox_inches="tight")
     return fig
 
 
@@ -137,7 +139,7 @@ def plot_exp_vs_descriptor(descriptor, output_name):
                 ads_energies[metal][key],
                 exp_tof[metal],
                 marker='x',
-                color=metal_colors[metal],
+                color='black',
                 s=70,
                 alpha=0.85,
             )
@@ -147,7 +149,7 @@ def plot_exp_vs_descriptor(descriptor, output_name):
                 textcoords="offset points",
                 xytext=(0, 10),
                 fontsize=8,
-                color=metal_colors[metal],
+                color='black',
                 ha='center'
             )
     
@@ -155,9 +157,8 @@ def plot_exp_vs_descriptor(descriptor, output_name):
     ax.set_ylabel("TOF / s^-1")
     ax.set_yscale("log")
     ax.set_title(f"Experimental TOF vs {descriptor}")
-    ax.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.5)
     fig.tight_layout()
-    fig.savefig(RESULTS_DIR / output_name, dpi=300, bbox_inches="tight")
+    fig.savefig(TOF_RESULTS_DIR / output_name, dpi=300, bbox_inches="tight")
     return fig
 
 

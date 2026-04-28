@@ -21,7 +21,7 @@ from model_data import (
 from TOF_calc import K, TOF_formate, carb_TOF, dG, wgsr_redox_tof
 
 
-RESULTS_DIR = Path(__file__).resolve().parent / "results"
+RESULTS_DIR = Path(__file__).resolve().parent / "results" / "volcano_heatmaps"
 
 # Use the same metal set as the model data for fitting descriptor scaling lines.
 fit_metals = metals
@@ -335,7 +335,7 @@ def plot_volcano_heatmap(mechanism_name, E_CO_mesh, E_O_mesh, Z_plot):
 
 
 def main():
-    RESULTS_DIR.mkdir(exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     for mechanism_name, mechanism in mechanisms.items():
         E_CO_mesh, E_O_mesh, Z_plot = build_surface_grid(mechanism["surface_fn"])
