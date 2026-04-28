@@ -267,7 +267,7 @@ mechanisms = {
 def build_surface_grid(surface_fn):
     """Evaluate one mechanism over a regular E_CO/E_O descriptor grid."""
     E_CO_vals = np.linspace(-2.4, 0.2, 100)
-    E_O_vals = np.linspace(-6.0, -2.0, 100)
+    E_O_vals = np.linspace(-7.0, -2.0, 100)
 
     E_CO_mesh, E_O_mesh = np.meshgrid(E_CO_vals, E_O_vals)
     Z = np.full_like(E_CO_mesh, np.nan, dtype=float)
