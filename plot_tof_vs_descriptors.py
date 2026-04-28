@@ -16,6 +16,7 @@ if not TOF_CSV.exists():
 from model_data import metals, exp_tof, ads_energies
 
 markers = {"redox": "o", "carboxyl": "s", "formate": "^"}
+mechanism_colors = {"redox": "black", "carboxyl": "#1f77b4", "formate": "#2ca02c"}
 colors = cm.tab10(np.linspace(0, 1, len(metals)))
 metal_colors = dict(zip(metals, colors))
 descriptors = {
@@ -50,7 +51,7 @@ def read_tof_results(csv_path):
         ]
 
 
-def plot_tof_vs_descriptor(results, descriptor, output_name, mechanism_filter=None):
+def plot_tof_vs_descriptor(results, descriptor, output_name, mechanism_filter=None, show_segmentation=True):
     fig, ax = plt.subplots(figsize=(8, 6))
     
     # Plot calculated TOF
@@ -100,7 +101,7 @@ def plot_tof_vs_descriptor(results, descriptor, output_name, mechanism_filter=No
             )
     
     # Highlight regimes for combined E_CO/E_O plots using the current axis window.
-    if not mechanism_filter and descriptor in {"E_CO", "E_O"}:
+    if show_segmentation and not mechanism_filter and descriptor in {"E_CO", "E_O"}:
         x_min, x_max = ax.get_xlim()
         if descriptor == "E_CO":
             regimes = [(x_min, -1.75, "Strong E_CO"), (-1.75, -0.5, "Intermediate E_CO"), (-0.5, x_max, "Weak E_CO")]
@@ -141,6 +142,7 @@ def plot_tof_vs_descriptor(results, descriptor, output_name, mechanism_filter=No
     ax.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.5)
     fig.tight_layout()
     fig.savefig(descriptor_output_dir(descriptor) / output_name, dpi=300, bbox_inches="tight")
+    plt.close(fig)
     return fig
 
 
@@ -173,6 +175,60 @@ def plot_exp_vs_descriptor(descriptor, output_name):
     ax.set_title(f"Experimental TOF vs {descriptor}")
     fig.tight_layout()
     fig.savefig(descriptor_output_dir(descriptor) / output_name, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    return fig
+
+
+def plot_connected_mechanisms(results, descriptor, output_name):
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    for mechanism in ["redox", "carboxyl", "formate"]:
+        mechanism_points = []
+
+        for metal in metals:
+            row = next((r for r in results if r["metal"] == metal and r["mechanism"] == mechanism), None)
+            if row:
+                mechanism_points.append(
+                    {
+                        "metal": metal,
+                        "x": descriptor_value(metal, descriptor),
+                        "tof": row["tof"],
+                    }
+                )
+
+        mechanism_points.sort(key=lambda point: point["x"])
+
+        ax.plot(
+            [point["x"] for point in mechanism_points],
+            [point["tof"] for point in mechanism_points],
+            marker=markers[mechanism],
+            color=mechanism_colors[mechanism],
+            markeredgecolor="black",
+            linewidth=1.6,
+            markersize=7,
+            label=mechanism.capitalize(),
+        )
+
+        for point in mechanism_points:
+            ax.annotate(
+                point["metal"],
+                (point["x"], point["tof"]),
+                textcoords="offset points",
+                xytext=(0, 8),
+                fontsize=8,
+                color=mechanism_colors[mechanism],
+                ha="center",
+            )
+
+    ax.set_xlabel(descriptors[descriptor]["label"])
+    ax.set_ylabel("TOF / s^-1")
+    ax.set_yscale("log")
+    ax.set_title(f"Connected Mechanism TOF vs {descriptor}")
+    ax.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.5)
+    ax.legend(title="Mechanism")
+    fig.tight_layout()
+    fig.savefig(descriptor_output_dir(descriptor) / output_name, dpi=300, bbox_inches="tight")
+    plt.close(fig)
     return fig
 
 
@@ -181,6 +237,14 @@ def main():
 
     for descriptor in descriptors:
         plot_tof_vs_descriptor(results, descriptor, f"tof_vs_{descriptor}.png")
+
+        if descriptor in {"E_CO", "E_O"}:
+            plot_tof_vs_descriptor(
+                results,
+                descriptor,
+                f"tof_vs_{descriptor}_no_segmentation.png",
+                show_segmentation=False,
+            )
 
         for mechanism in ["redox", "carboxyl", "formate"]:
             plot_tof_vs_descriptor(
@@ -191,6 +255,7 @@ def main():
             )
 
         plot_exp_vs_descriptor(descriptor, f"exp_tof_vs_{descriptor}.png")
+        plot_connected_mechanisms(results, descriptor, f"tof_vs_{descriptor}_connected.png")
 
     plt.show()
 

@@ -42,6 +42,8 @@ def read_tof_results(csv_path: Path) -> list[dict[str, float | str]]:
 
 def plot_mechanism_maps(rows: list[dict[str, float | str]]) -> None:
     mechanisms = sorted({str(row["mechanism"]) for row in rows})
+    vmin = min(float(row["log10_tof"]) for row in rows)
+    vmax = max(float(row["log10_tof"]) for row in rows)
 
     for mechanism in mechanisms:
         mechanism_rows = [row for row in rows if row["mechanism"] == mechanism]
@@ -53,6 +55,8 @@ def plot_mechanism_maps(rows: list[dict[str, float | str]]) -> None:
             c=[float(row["log10_tof"]) for row in mechanism_rows],
             s=120,
             cmap="viridis",
+            vmin=vmin,
+            vmax=vmax,
             edgecolor="black",
             linewidth=0.7,
         )
