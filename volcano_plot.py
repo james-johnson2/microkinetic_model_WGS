@@ -23,10 +23,10 @@ from TOF_calc import K, TOF_formate, carb_TOF, dG, wgsr_redox_tof
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results" / "volcano_heatmaps"
 
-# Use the same metal set as the model data for fitting descriptor scaling lines.
+# Use the same metal set as the model data for fitting descriptor scaling lines
 fit_metals = metals
 
-# The volcano surfaces use CO and O adsorption energies as the two descriptors.
+# The volcano surfaces use CO and O adsorption energies as the two descriptors
 X_desc = np.array([
     [ads_energies[m]["CO"], ads_energies[m]["O"]]
     for m in fit_metals
@@ -34,7 +34,7 @@ X_desc = np.array([
 
 
 def fit_descriptor_model(values_by_metal):
-    """Fit a linear scaling relation against E_CO and E_O."""
+    #Fit a linear scaling relation against E_CO and E_O
     y = np.array([values_by_metal[m] for m in fit_metals])
     model = LinearRegression()
     model.fit(X_desc, y)
@@ -42,18 +42,18 @@ def fit_descriptor_model(values_by_metal):
 
 
 def predict(model, E_CO, E_O):
-    """Predict a scaled thermodynamic or kinetic value at one descriptor point."""
+    #Predict a scaled thermodynamic or kinetic value at one descriptor point
     return float(model.predict(np.array([[E_CO, E_O]]))[0])
 
 
-# H2O adsorption is not a descriptor, so it is predicted from E_CO and E_O.
+# H2O adsorption is not a descriptor, so it is predicted from E_CO and E_O
 ads_models = {
     "H2O": fit_descriptor_model({
         m: ads_energies[m]["H2O"] for m in fit_metals
     })
 }
 
-# Scale every tabulated reaction enthalpy and activation energy over descriptor space.
+# Scale every tabulated reaction enthalpy and activation energy over descriptor space
 enthalpy_models = {
     key: fit_descriptor_model({m: vals[m] for m in fit_metals})
     for key, vals in enthalpies.items()
@@ -66,24 +66,24 @@ ea_models = {
 
 
 def scaled_h(reaction, E_CO, E_O):
-    """Predict one reaction enthalpy at a descriptor point."""
+    #Predict one reaction enthalpy at a descriptor point
     return predict(enthalpy_models[reaction], E_CO, E_O)
 
 
 def scaled_ea(reaction, E_CO, E_O):
-    """Predict one activation energy at a descriptor point."""
+    #Predict one activation energy at a descriptor point
     return predict(ea_models[reaction], E_CO, E_O)
 
 
 def safe_log10_tof(tof):
-    """Return log10(TOF), using NaN for invalid surface points."""
+    #Return log10(TOF), using NaN for invalid surface points
     if tof <= 0 or not np.isfinite(tof):
         return np.nan
     return np.log10(tof)
 
 
 def redox_surface(E_CO, E_O):
-    """Continuous redox-mechanism log10(TOF) over E_CO/E_O descriptor space."""
+    #Continuous redox-mechanism log10(TOF) over E_CO/E_O descriptor space
     E_ads_H2O = predict(ads_models["H2O"], E_CO, E_O)
 
     K1 = K(dG(0, [VIB_DATA["CO_NIST"]], [VIB_DATA["CO"]], E_CO))
@@ -123,7 +123,7 @@ def redox_surface(E_CO, E_O):
 
 
 def carboxyl_surface(E_CO, E_O):
-    """Continuous carboxyl-mechanism log10(TOF) over E_CO/E_O descriptor space."""
+    #Continuous carboxyl-mechanism log10(TOF) over E_CO/E_O descriptor space
     E_ads_H2O = predict(ads_models["H2O"], E_CO, E_O)
 
     dG1 = dG(0, [VIB_DATA["H2O_NIST"]], [VIB_DATA["H2O"]], E_ads_H2O)
@@ -169,7 +169,7 @@ def carboxyl_surface(E_CO, E_O):
 
 
 def formate_surface(E_CO, E_O):
-    """Continuous formate-mechanism log10(TOF) over E_CO/E_O descriptor space."""
+    #Continuous formate-mechanism log10(TOF) over E_CO/E_O descriptor space
     E_ads_H2O = predict(ads_models["H2O"], E_CO, E_O)
 
     dG1 = dG(0, [VIB_DATA["CO_NIST"]], [VIB_DATA["CO"]], E_CO)
@@ -265,7 +265,7 @@ mechanisms = {
 
 
 def build_surface_grid(surface_fn):
-    """Evaluate one mechanism over a regular E_CO/E_O descriptor grid."""
+    #Evaluate one mechanism over a regular E_CO/E_O descriptor grid
     E_CO_vals = np.linspace(-2.4, 0.2, 100)
     E_O_vals = np.linspace(-7.0, -2.0, 100)
 
@@ -281,7 +281,7 @@ def build_surface_grid(surface_fn):
 
 
 def plot_volcano_surface(mechanism_name, E_CO_mesh, E_O_mesh, Z_plot):
-    """Create one 3D volcano surface and overlay the tabulated metal points."""
+    #Create one 3D volcano surface and overlay the tabulated metal points
     mechanism = mechanisms[mechanism_name]
     fig = plt.figure(figsize=(11, 8))
     ax = fig.add_subplot(111, projection="3d")
